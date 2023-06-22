@@ -34,7 +34,7 @@ knitr::opts_chunk$set(cache = FALSE, echo = TRUE, message = FALSE, warning = FAL
 <!-- ======================================================================= -->
 <!-- ============================== FOOTNOTES ============================== -->
 <!-- ======================================================================= -->
-[^1]: 20080481, [Github Repo](https://github.com/dumanenes3/Final.git)
+[^1]: 20080481, [Github Repo](https://github.com/dumanenes3/Resit)
 
 # Introduction
 "Centuries ago, in ancient Greek city-states and in Rome, when direct democracy allowed people to exercise their sovereignty directly, the growth of states and increase in population made representative democracy inevitable. Democracy provides individuals with the opportunity for active participation and voting" (Dahl, 2017: 48).
