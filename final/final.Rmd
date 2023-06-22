@@ -1,0 +1,275 @@
+---
+title: "Measuring Voters' Knowledge of the Electoral System"
+author: 
+  - Duman, Enes[^1]
+bibliography: ../bibliography/biblio.bib
+csl: ../csl/apa.csl
+header-includes:
+  - \usepackage{polyglossia}
+  - \setmainlanguage{english}
+  - \usepackage{booktabs}
+  - \usepackage{caption} 
+  - \captionsetup[table]{skip=10pt}
+output:
+  bookdown::pdf_document2:
+    fig_caption: yes
+    fig_height: 3
+    fig_width: 4
+    keep_tex: no
+    latex_engine: xelatex
+    number_sections: yes
+    toc: no
+geometry: margin=1in
+link-citations: yes
+urlcolor: blue
+fontsize: 12pt
+biblio-style: apalike
+abstract: |
+    Voters may not be able to keep up with the constantly changing electoral system. When confusing coalition efforts by political parties are added to this situation, it can also affect the decisions of voters. In our country, the D'Hondt system with a threshold has been used in almost all elections since the proclamation of the republic. Under the current system, political parties need to surpass a 7% vote threshold to enter the Grand National Assembly. However, if a few parties form an electoral alliance and the total votes received by the parties in the alliance exceed the threshold, all the parties involved in the alliance are considered to have surpassed the threshold. However, there is another important detail to be emphasized at this point. The number of parliamentary seats allocated to each province under the D'Hondt method is calculated based on the votes received by the parties in that province. In other words, even if parties exceed the 7% threshold by forming an alliance, they may still not be able to enter the parliament due to the D'Hondt system. This research was conducted using the survey method to measure the awareness of the voters about this election system.
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = FALSE, echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+<!-- ======================================================================= -->
+<!-- ============================== FOOTNOTES ============================== -->
+<!-- ======================================================================= -->
+[^1]: 20080481, [Github Repo](https://github.com/dumanenes3/Final.git)
+
+# Introduction
+"Centuries ago, in ancient Greek city-states and in Rome, when direct democracy allowed people to exercise their sovereignty directly, the growth of states and increase in population made representative democracy inevitable. Democracy provides individuals with the opportunity for active participation and voting" (Dahl, 2017: 48).
+On May 14, 2023, the "Presidential Election and 28th Term Parliamentary General Election" took place in Turkey. "Turkey's new electoral system and alliance regulations offer many new and different opportunities for implementation. Flexibility has been introduced in areas such as the application of the electoral threshold, candidate list formation, and seat distribution, which caused political parties in other systems around the world to approach alliances with reluctance" (Ünal B. A. 2019).
+Especially for parties that cannot enter the parliament, the only way to surpass the 7% threshold is through a "power union" by forming alliances. According to the current system, if the total vote of the electoral alliance exceeds 7%, all parties involved in the alliance are considered to have surpassed the threshold. However, another problem arises at this point. Even if political parties exceed the threshold by forming an alliance, they may not be able to enter the parliament due to the "D'Hondt System."
+The creation of electoral alliances involves numerous technical parameters. While politicians establish alliances without disregarding cultural, political, and ideological differences, they may focus more on technical issues and this may cause confusion for voters. The aim of this research is to determine this occured confusion. Do voters in Turkey have sufficient knowledge about the current electoral system?
+Elections are an important part of democracy. Voters participate in the process by exercising their right to vote effectively before, during, and after elections. Voter turnout is a significant factor that influences the legitimacy of the elected government in a democratic society. However, the knowledge of voters about the electoral system is equally important. Compared to other countries, voter turnout in our country is quite high. Graph 1 shows the participation rates of the public in recent elections in some countries. Evaluating the knowledge levels of voters regarding the electoral system is an important research area for the effectiveness of democratic processes and political participation of the public.
+```{r,echo=FALSE}
+library(ggplot2)
+
+countries <- c("Germany", "Canada", "Japan", "United Kingdom", "France", "Brazil", "South Korea", "Australia", "India", "United States", "Turkey")
+turnout_rates <- c(76.2, 67.0, 53.7, 67.3, 61.4, 78.2, 72.8, 91.4, 66.4, 55.7, 84.2)
+
+data <- data.frame(Countries = countries, Turnout_Rates = turnout_rates)
+
+ggplot(data = data, aes(x = reorder(Countries, -Turnout_Rates), y = Turnout_Rates)) +
+  geom_bar(stat = "identity", fill = "blue", width = 0.5) +
+  labs(title = "Graph 1",
+       x = "Countries",
+       y = "Turnout Rate (%)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        axis.line = element_line(size = 0.5, color = "black")) +
+  coord_flip()
+```
+
+# Data
+For the purpose of the research, a survey was conducted with 63 participants from 9 different provinces in Turkey, representing various age, gender, education, income, and occupation groups. Participants below the age of 18 will not be considered (the voting age in Turkey is 18). The survey included personal questions such as age, gender, education level, annual household income, occupation, as well as questions about the electoral threshold percentage to be applied in the May 14 elections, whether they had heard of the D'Hondt system before, whether the political party they intended to support was part of an alliance, what decision they would make if the political party they intended to support made a decision contrary to their own ideas, and how many Members of Parliament would be elected from their province.
+
+
+
+
+
+```{r, eval=FALSE, echo=FALSE}
+library(readxl)
+data <- read_excel("enes.xlsx")
+data
+
+filtered_data <- data[data$Age.Information != "18 yaşından küçük", ]
+```
+# Data Analysis
+## The D'Hondt System and Awareness
+### The D'Hondt System
+In our country, in the system that has been used in almost every election since the establishment of the Republic, the votes received by parties are divided by 1, 2, 3, 4, etc., and the resulting numbers are sorted from highest to lowest, regardless of party affiliation. Parliamentary seats are allocated based on the order of these numbers (Özbudun,  1995). The results for Kocaeli, represented by 14 Members of Parliament, in the elections held on May 14, 2023, are shown below.
+```{r, echo=FALSE}
+party_names <- c("Memleket", "BBP", "AK Party", "Yeniden Refah", "MHP", "Yeşil Sol", "CHP", "İyi", "Zafer")
+party_votes <- c(16826, 15287, 531740, 79279, 112123, 77057, 322524, 130522, 43088)
+seat_count <- 14
+
+calculate_dhondt <- function(votes, seat_count) {
+  seats <- rep(0, length(votes))
+  
+  for (i in 1:seat_count) {
+    vote_ratios <- votes / (seats + 1)
+    max_index <- which.max(vote_ratios)
+    seats[max_index] <- seats[max_index] + 1
+  }
+  
+  return(seats)
+}
+
+seat_distribution <- calculate_dhondt(party_votes, seat_count)
+
+a <- data.frame(Partiler = party_names, Oylar = party_votes, Vekiller = seat_distribution)
+
+
+oy_tablosu <- a[, c("Partiler", "Oylar")]
+
+
+vekil_tablosu <- a[, c("Partiler", "Vekiller")]
+
+
+
+cat("Oy Tablosu:\n")
+print(knitr::kable(oy_tablosu, format = "markdown"))
+
+cat("\nVekil Tablosu:\n")
+print(knitr::kable(vekil_tablosu, format = "markdown"))
+
+```
+### Research Results
+As can be seen in Table 1, the majority of voters responded "Evet" to the question "Do you think you have sufficient knowledge about the electoral system?" However, when asked the question "Have you heard of the D'Hondt system before?" the majority responded "Hayır" (Table 2). Furthermore, out of the 42 voters who believed they had sufficient knowledge about the electoral system, only 21 indicated that they had heard of the D'Hondt system before.
+```{r, echo=FALSE}
+library(readxl)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+aa <- read_excel("enes.xlsx")
+
+aa <- aa %>%
+  filter(Age.Information != "18 yaşından küçük")
+
+evet_sayisi <- sum(aa$Yes.No == "Evet")
+hayir_sayisi <- sum(aa$Yes.No == "Hayır")
+
+tablo <- data.frame(Answer = c("Evet", "Hayır"),
+                    Count = c(evet_sayisi, hayir_sayisi))
+
+knitr::kable(tablo, caption = "\\textbf{} ", booktabs = TRUE,
+             align = "c") %>%
+  kable_styling(latex_options = "striped", font_size = 12)
+```
+
+```{r, echo=FALSE}
+library(readxl)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+bb <- read_excel("enes.xlsx")
+bb <- bb %>%
+  filter(Age.Information != "18 yaşından küçük")
+evet_sayisi <- sum(bb$DHondt.Sistemi == "Evet, daha önce duydum.")
+hayir_sayisi <- sum(bb$DHondt.Sistemi == "Hayır, ilk kez duyuyorum.")
+
+tablo <- data.frame("Answer" = c("Evet", "Hayır"),
+                    "Count" = c(evet_sayisi, hayir_sayisi))
+
+knitr::kable(tablo, caption = "\\textbf{} ", booktabs = TRUE,
+             align = "c") %>%
+  kable_styling(latex_options = "striped", font_size = 12)
+
+```
+
+```{r, echo=FALSE, eval=FALSE}
+library(readxl)
+
+
+Q13 <- read_excel("enes.xlsx") 
+
+a <- c("Evet","Hayır")
+c <- ifelse(Q13$Yes.No =="Evet",1,0) 
+b <- ifelse(Q13$Yes.No =="Hayır",1,0) 
+c
+b
+t <- sum (c == 1)
+m <- sum (b == 1)
+
+t %/% t+m
+
+e <- ifelse(Q13$DHondt.Sistemi =="Evet, daha önce duydum.",1,0) 
+f <- ifelse(Q13$DHondt.Sistemi =="Hayır, ilk kez duyuyorum.",1,0)
+e
+f
+k <- sum(e ==1)
+l <- sum(f ==1)
+k
+l
+
+
+
+h <-  paste(c,e)
+h
+sum(h=="1 1")
+
+#Seçim sistemini biliyorum diyen insanların 21 tanesi D'Hondt Sistemini daha önce duymuş.
+```
+
+## Number of Deputies of Provinces
+
+Another focus of the research is to determine whether voters know how many representatives their provinces have in the Grand National Assembly of Turkey (TBMM). The table below shows the numbers of participating voters who know the number of MPs representing their provinces. Approximately 41% of the surveyed voters know how many representatives their voting districts have in the TBMM.
+```{r, eval=FALSE, echo=FALSE}
+library(readxl)
+data <- read_excel("enes.xlsx")
+data
+
+filtered_data <- data[data$Age.Information != "18 yaşından küçük", ]
+enes <- read_excel("enes.xlsx")
+
+a1 <- filtered_data$City
+a2 <- filtered_data$Number.of.Represent
+
+a3 <- paste(a1, a2)
+
+a4 <- ifelse(a3 == "Kocaeli 14", "Doğru", "Yanlış")
+b1 <- sum(a4 == "Doğru")
+
+a5 <- ifelse(a3 == "Istanbul 98", "Doğru", "Yanlış")
+b2 <- sum(a5 == "Doğru")
+
+a6 <- ifelse(a3 == "Gumushane 2", "Doğru", "Yanlış")
+b3 <- sum(a6 == "Doğru")
+
+a7 <- ifelse(a3 == "Erzurum 6", "Doğru", "Yanlış")
+b4 <- sum(a7 == "Doğru")
+
+a8 <- ifelse(a3 == "Bursa 20", "Doğru", "Yanlış")
+b5 <- sum(a8 == "Doğru")
+
+a9 <- ifelse(a3 == "Bilecik 2", "Doğru", "Yanlış")
+b6 <- sum(a9 == "Doğru")
+
+a10 <- ifelse(a3 == "Ankara 36", "Doğru", "Yanlış")
+b7 <- sum(a10 == "Doğru")
+
+a11 <- ifelse(a3 == "Sakarya 8", "Doğru", "Yanlış")
+b8 <- sum(a11 == "Doğru")
+
+a12 <- ifelse(a3 == "Mugla 7", "Doğru", "Yanlış")
+b9 <- sum(a12 == "Doğru")
+
+
+
+```
+
+```{r, echo=FALSE}
+
+provinces <- c("Kocaeli", "Istanbul", "Gumushane", "Sakarya", "Mugla", "Erzurum", "Bursa", "Bilecik", "Ankara")
+
+
+representatives <- c(14, 98, 2, 8, 7, 6, 20, 2, 36)
+
+correct_voters <- c(13, 2, 1, 1, 1, 2, 0, 3, 2)
+
+survey_voters <- c(37, 7, 1, 1, 1, 2, 1, 3, 8)
+
+table <- data.frame(Province = provinces, "Vekil Sayısı" = representatives, "Doğru bilen sayısı" = correct_voters, "katılan sayısı" = survey_voters)
+
+print(table)
+
+
+```
+# Conclusion
+As a result of this research, voters believe they have enough knowledge about the electoral system, but the reality is different. It is not only important to vote but also to vote consciously. The voters' knowledge of the electoral system needs to be updated. When voters know how many votes their preferred political party needs to enter the parliament due to the D'Hondt system, their behavior may change. A citizen who knows the conditions for their preferred political party to enter the parliament will not stay away from politics. 
+In democracy, each vote is crucial. In the upcoming periods, if voters have sufficient knowledge about the electoral system, the concept of "strategic voting" will gain more importance. "Strategic voting is defined as the behavior of voters to vote for a party other than their most preferred party in order to achieve a goal" (Ünal, B.A. 2018). With the increasing importance of this behavior, larger parties that seek the votes of smaller parties' voters will not disregard their thoughts, desires, and ideologies. As a result, political parties can achieve higher vote percentages. Finally, a parliament representing the majority emerges.
+
+
+\newpage
+# References {#references}
+1. Dahl, R. A. (2017). Demokrasi Üzerine. Kadıoğlu, B. (Çev.). Ankara: Phoenix Yayınları.
+2. Ünal, B. A. (2019). Türkiye’nin Yeni Sisteminde Seçim Öncesi İttifaklar. Gümüşhane Üniversitesi Sosyal Bilimler Dergisi, 10(2), 321-328.
+2. Özbudun, E. (1995). Seçim sistemleri ve Türkiye. Ankara Üniversitesi Hukuk Fakültesi Dergisi, 44(1).
+3. ÜNAL, B. A. (2018). Stratejik oy verme davranışı: sistematik literatür incelemesi. Gaziantep University Journal of Social Sciences, 17(4), 1415-1424.
+<div id="refs"></div>
+
